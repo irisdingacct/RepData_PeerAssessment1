@@ -1,4 +1,4 @@
-title: "Reproducible Research: Peer Assessment 1"
+####title: "Reproducible Research: Peer Assessment 1"- Activity Monitoring
 
 ##1. Reading Dataset & processing data
 
@@ -129,11 +129,11 @@ Are there differences in activity patterns between weekdays and weekends?
 Yes. During weekdays, activity level tends to peak around 8:00ish in the morning and 5:00ish in the afternoon which can be explained by ppl traveling for work.
 During weekends, activity level is showing increasing trend starting from 8ish in the morning and towards 20:00 at night. It tends to suggest that ppl are overall more active during weekend.
 
-
 ```{r,echo=TRUE}
 library(knitr)
 knit2html("PA1_template.rmd")
 ```
+
 
 
 
