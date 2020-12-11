@@ -1,0 +1,140 @@
+title: "Reproducible Research: Peer Assessment 1"
+
+##1. Reading Dataset & processing data
+
+```{r,echo=TRUE}
+data <- read.csv("./activity.csv", header = TRUE)
+datac <-data.frame(data)
+datac[is.na(datac)]<-0
+          
+datasub <- tapply(data$steps, data$date, sum, na.rm = TRUE)
+datasub <- data.frame(datasub)
+colnames(datasub)[1] = "Steps"
+```
+
+##2. Histogram of the total number of steps taken each day
+
+```{r, echo=TRUE}
+library(ggplot2)
+ggplot(datasub, aes(x = Steps)) + geom_histogram(fill = "blue", binwidth = 500) + labs(title = "No. of Steps per day", x = "Steps", y = "Frequency")
+```
+
+##3. Mean and median number of steps taken each day
+```{r, echo=TRUE}
+datamean <- mean(datasub$Steps)
+datamedian <- median(datasub$Steps) 
+```
+
+##4. Times series plot of the average number of steps taken, per 5 min block (ref interval)
+
+```{r, echo=TRUE}
+data <- read.csv("./activity.csv", header = TRUE)
+data[is.na(data)] <-0
+Averagesteps <- as.numeric(tapply(data$steps, data$interval, mean, na.rm = TRUE))
+Averagesteps
+Interval <- unique(data$interval, incomparables = FALSE)
+
+Averagesteps <- data.frame(Interval, Averagesteps)
+
+ggplot(data = Averagesteps, aes(x = Interval, y = Averagesteps)) + geom_line(color = "green", size = 1)
+
+```
+
+##5. The 5-minute interval that, on average, contains the maximum number of steps
+
+```{r, echo=TRUE}
+summary(Averagesteps)
+Averagesteps[which.max(Averagesteps[,2]), ]
+```
+According to the information above, on average, the 5-min interval at 8:35am contains the maximum number of steps
+
+##6. Code to describe and show a strategy for imputing missing data
+
+```{r, echo=TRUE}
+data <- read.csv("./activity.csv", header = TRUE)
+##sum of missing values in data frame
+sum(is.na(data$steps))
+
+```
+```{r, echo=TRUE}
+summary(data)
+##As indicated in the summary below, we can find the mean value of the non missing data to be 37.38.
+
+imputeddata <- data
+imputeddata[is.na(imputeddata)] <- 37.38
+
+```
+##7. Histogram of the total number of steps taken each day after missing values are imputed
+```{r, echo = TRUE}
+imdatasub <- tapply(imputeddata$steps, imputeddata$date, sum, na.rm = TRUE)
+imdatasub <- data.frame(imdatasub)
+colnames(imdatasub)[1] = "Steps"
+
+library(ggplot2)
+ggplot(imdatasub, aes(x = Steps)) + geom_histogram(fill = "blue", binwidth = 500) + labs(title = "No. of Steps per day", x = "Steps", y = "Frequency")
+```
+
+
+##8.Panel plot comparing the average number of steps taken per 5-minute interval across weekdays and weekends
+
+```{r, echo=TRUE}
+data <- read.csv("./activity.csv", header = TRUE)
+imputeddata <- data
+imputeddata[is.na(imputeddata)] <- 37.38
+
+wkd <- as.Date(imputeddata$date)
+wkd1 <- weekdays(wkd, abbreviate=TRUE)
+
+weekdayimdata <- data.frame(imputeddata, wkd1)
+
+##Weekend dataset
+weekenddata <- subset(weekdayimdata, grepl("^S", weekdayimdata$wkd1))
+Averagestepswknd <- data.frame(tapply(weekenddata$steps, weekenddata$interval, mean, na.rm = TRUE))
+weekenddatac <- data.frame(Averagestepswknd, weekenddata$interval, 1)
+colnames(weekenddatac)[2] = "Interval"
+colnames(weekenddatac)[3] = "X2"
+colnames(weekenddatac)[1] = "AvgSteps"
+
+##Weekday dataset
+Mondata <- subset(weekdayimdata, grepl("Mon", weekdayimdata$wkd1))
+Mondatac <- data.frame(Mondata, 2)
+Tuedata <- subset(weekdayimdata, grepl("Tue", weekdayimdata$wkd1))
+Tuedatac <- data.frame(Tuedata, 2)
+Weddata <- subset(weekdayimdata, grepl("Wed", weekdayimdata$wkd1))
+Weddatac <- data.frame(Weddata, 2)
+Thudata <- subset(weekdayimdata, grepl("Thu", weekdayimdata$wkd1))
+Thudatac <- data.frame(Thudata, 2)
+Fridata <- subset(weekdayimdata, grepl("Fri", weekdayimdata$wkd1))
+Fridatac <- data.frame(Fridata, 2)
+
+##Final dataset, Weekend = 1 & Weekday = 2
+WKDYfinalset <- rbind(Mondatac, Tuedatac, Weddatac, Thudatac, Fridatac)
+
+Averagestepswkdyfinal <- data.frame(tapply(WKDYfinalset$steps, WKDYfinalset$interval, mean, na.rm = TRUE))
+weekdayfinal <- data.frame(Averagestepswkdyfinal, WKDYfinalset$interval, 2)
+colnames(weekdayfinal)[2] = "Interval"
+colnames(weekdayfinal)[3] = "X2"
+colnames(weekdayfinal)[1] = "AvgSteps"
+
+finalplot <- rbind(weekenddatac, weekdayfinal)
+AvgSteps <- finalplot$AvgSteps
+
+library(ggplot2)
+qplot(Interval, AvgSteps, data = finalplot, facets =  .~finalplot$X2, type = "l", main = "Weekend v.s Weekday steps") + geom_line(method = "lm", type = "l")
+
+```
+
+WEEKEND = Graph1, WEEKDAY = Graph2
+Are there differences in activity patterns between weekdays and weekends?
+Yes. During weekdays, activity level tends to peak around 8:00ish in the morning and 5:00ish in the afternoon which can be explained by ppl traveling for work.
+During weekends, activity level is showing increasing trend starting from 8ish in the morning and towards 20:00 at night. It tends to suggest that ppl are overall more active during weekend.
+
+
+```{r,echo=TRUE}
+library(knitr)
+knit2html("PA1_template.rmd")
+```
+
+
+
+
